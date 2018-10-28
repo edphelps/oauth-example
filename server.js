@@ -13,10 +13,12 @@ const port = process.env.PORT || 3030;
 console.log("*** Starting a spin through server.js");
 
 /* ***********************************
-  setup a cookie session, why??
+  Setup a cookie session that OAuth uses to pass its token back and forth
+  that is uses to get back the user object it cached.
+  What is the secret doing?
 ************************************ */
 app.use(cookieSession({
-    secret: process.env.COOKIE_SECRET
+  secret: process.env.COOKIE_SECRET
 }));
 
 /* ***********************************
@@ -30,25 +32,24 @@ app.use(passport.initialize());
   Initialize passport to use GitHub strategy
 ************************************ */
 passport.use(new GitHubStrategy(
-    {
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: process.env.CALLBACK,
-      userAgent: process.env.DOMAIN
-    },
-    function onSuccess(token, refreshToken, profile, done) {
-      console.log("*** onSuccess, token: ", token);
-      console.log("*** onSuccess, profile.displayName: ", profile.displayName);
-      // serialize token and profile
-      done(null, { token, profile })
-    }
+  {
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: process.env.CALLBACK,
+    userAgent: process.env.DOMAIN
+  },
+  function onSuccess(token, refreshToken, profile, done) {
+    console.log("*** onSuccess, token: ", token);
+    console.log("*** onSuccess, profile.displayName: ", profile.displayName);
+    // serialize token and profile
+    done(null, { token, profile })
+  }
 ));
 
 /* ***********************************
   passport.session() call to return middleware
 
-  This has to do with passport creating peristent login stations
-  Why and how??????
+  This has to do with passport creating peristent login sessions
 ************************************ */
 app.use(passport.session());
 
@@ -98,10 +99,10 @@ passport.deserializeUser((object, done) => {
   http GET localhost:3000?user=Charlie
 ************************************ */
 app.get('/auth/github/callback',
-    passport.authenticate('github', {
-        successRedirect: '/',
-        failureRedirect: '/login'
-    })
+  passport.authenticate('github', {
+    successRedirect: '/',
+    failureRedirect: '/login'
+  })
 )
 
 /* ***********************************
@@ -114,7 +115,7 @@ app.get('/auth/github/callback',
 app.get('/', (req, res, next) => {
     // req.user is filled in by the passport middleware
     console.log("*** GET / req.user: ", req.user);
-    res.status(200).send('HOME: req.user: '+ JSON.stringify(req.user));
+    res.status(200).send('HOME: req.user: '+ JSON.stringify(req.user) + "<br>login at http://127.0.0.1:3030/auth/github/callback");
 })
 
 /* ***********************************
